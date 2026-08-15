@@ -1757,23 +1757,28 @@
             status.className = 'msg-status success';
         }
 
-        // 导出单条留言为 txt
+        // 导出单条留言为 txt（返回 Promise，触发后 resolve）
         function downloadSingle(index) {
-            const messages = JSON.parse(localStorage.getItem('qixi_messages') || '[]');
-            const msg = messages[index];
-            if (!msg) return;
+            return new Promise((resolve) => {
+                const messages = JSON.parse(localStorage.getItem('qixi_messages') || '[]');
+                const msg = messages[index];
+                if (!msg) { resolve(false); return; }
 
-            const filename = msg.time.replace(/[: ]/g, '-') + '.txt';
-            const blob = new Blob([msg.text], { type: 'text/plain;charset=utf-8' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(a.href);
+                const filename = msg.time.replace(/[: ]/g, '-') + '.txt';
+                const blob = new Blob([msg.text], { type: 'text/plain;charset=utf-8' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+
+                // 给浏览器一点时间处理下载
+                setTimeout(() => resolve(true), 150);
+            });
         }
 
-        // 导出全部留言
-        function exportAllMessages() {
+        // 导出全部留言（逐条触发，实时显示进度）
+        async function exportAllMessages() {
             const messages = JSON.parse(localStorage.getItem('qixi_messages') || '[]');
             if (messages.length === 0) {
                 const status = document.getElementById('msgStatus');
@@ -1784,19 +1789,20 @@
 
             const total = messages.length;
             const status = document.getElementById('msgStatus');
+            let success = 0;
 
-            messages.forEach((msg, idx) => {
-                setTimeout(() => downloadSingle(idx), idx * 300);
-            });
-
-            status.textContent = `📦 正在下载 ${total} 条留言 ...`;
+            status.textContent = `📦 正在准备导出 ${total} 条留言 ...`;
             status.className = 'msg-status success';
 
-            // 全部下载完毕后显示完成提示
-            setTimeout(() => {
-                status.textContent = `✅ 全部 ${total} 条留言已下载完成 💾`;
+            for (let i = 0; i < total; i++) {
+                const ok = await downloadSingle(i);
+                if (ok) success++;
+                status.textContent = `� 导出中 (${i + 1}/${total}) ...`;
                 status.className = 'msg-status success';
-            }, total * 300 + 600);
+            }
+
+            status.textContent = `✅ ${success}/${total} 条留言已成功导出 💾`;
+            status.className = 'msg-status success';
         }
 
         // 初始化留言列表
