@@ -972,6 +972,25 @@
             color: #ff6b9d;
         }
 
+        .message-item .msg-delete {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.35);
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 12px;
+            flex-shrink: 0;
+            transition: all 0.3s;
+            margin-left: 6px;
+        }
+
+        .message-item .msg-delete:hover {
+            border-color: #ff4757;
+            color: #ff4757;
+            background: rgba(255,71,87,0.1);
+        }
+
         /* ===== 加载提示 ===== */
         .loading-toast {
             position: fixed;
@@ -1151,7 +1170,7 @@
                 <h2>💬 留下你的话</h2>
                 <p class="message-sub">写下你想对我说的话，它会永远保存在这里 💾</p>
                 <div class="message-card">
-                    <textarea id="msgInput" placeholder="写下你想说的话 ...&#10;你的留言会被保存在 GitHub 仓库的 messages 文件夹中，成为我们爱情的一部分 ❤️"></textarea>
+                    <textarea id="msgInput" placeholder="写下你想说的话 ...&#10;留言会保存在你的浏览器中，随时可以导出为 txt 文件 ❤️"></textarea>
                     <div class="msg-actions">
                         <button class="btn-msg btn-msg-save" onclick="saveMessage()">💾 保存留言</button>
                         <button class="btn-msg btn-msg-export" onclick="exportAllMessages()">📦 导出全部</button>
@@ -1673,7 +1692,10 @@
                 div.innerHTML = `
                     <span class="msg-text">${escapeHtml(msg.text)}</span>
                     <span class="msg-time">${msg.time}</span>
-                    <button class="msg-download" onclick="downloadSingle(${idx})">📥 导出</button>
+                    <span style="display:flex;gap:4px;flex-shrink:0;">
+                        <button class="msg-download" onclick="downloadSingle(${idx})">📥 导出</button>
+                        <button class="msg-delete" onclick="deleteMessage(${idx})">🗑️ 删除</button>
+                    </span>
                 `;
                 list.appendChild(div);
             });
@@ -1717,6 +1739,21 @@
             input.value = '';
 
             status.textContent = '✅ 留言已保存 ❤️';
+            status.className = 'msg-status success';
+        }
+
+        // 删除单条留言
+        function deleteMessage(index) {
+            const status = document.getElementById('msgStatus');
+            const messages = JSON.parse(localStorage.getItem('qixi_messages') || '[]');
+
+            if (index < 0 || index >= messages.length) return;
+
+            messages.splice(index, 1);
+            localStorage.setItem('qixi_messages', JSON.stringify(messages));
+            loadMessages();
+
+            status.textContent = '🗑️ 留言已删除';
             status.className = 'msg-status success';
         }
 
