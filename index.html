@@ -1782,13 +1782,21 @@
                 return;
             }
 
+            const total = messages.length;
+            const status = document.getElementById('msgStatus');
+
             messages.forEach((msg, idx) => {
                 setTimeout(() => downloadSingle(idx), idx * 300);
             });
 
-            const status = document.getElementById('msgStatus');
-            status.textContent = `📦 正在下载 ${messages.length} 条留言 ...`;
+            status.textContent = `📦 正在下载 ${total} 条留言 ...`;
             status.className = 'msg-status success';
+
+            // 全部下载完毕后显示完成提示
+            setTimeout(() => {
+                status.textContent = `✅ 全部 ${total} 条留言已下载完成 💾`;
+                status.className = 'msg-status success';
+            }, total * 300 + 600);
         }
 
         // 初始化留言列表
